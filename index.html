@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rutas IKEA Jerez</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #0058a3, #003d73);
+            color: white;
+            padding: 25px 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo h1 {
+            font-size: 28px;
+        }
+
+        .badge-voice {
+            background: #ffb300;
+            color: #333;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-left: 10px;
+        }
+
+        .subtitle {
+            margin-top: 8px;
+            opacity: 0.9;
+            padding-left: 52px;
+        }
+
+        .control-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .input-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .input-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-section h2 {
+            grid-column: 1 / -1;
+            font-size: 20px;
+            color: #0058a3;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-with-button {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .input-with-button input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 15px;
+            min-width: 150px;
+        }
+
+        .input-with-button input:focus {
+            outline: none;
+            border-color: #0058a3;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #0058a3;
+        }
+
+        .btn-voice {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-voice:hover {
+            background: #388E3C;
+        }
+
+        .btn-voice.listening {
+            background: #f44336;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .btn-primary, .btn-secondary, .btn-danger, .btn-calculate {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #0058a3;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #003d73;
+        }
+
+        .btn-secondary {
+            background: #e8edf3;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d5dde7;
+        }
+
+        .btn-danger {
+            background: #e53935;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c62828;
+        }
+
+        .btn-calculate {
+            background: #ffb300;
+            color: #333;
+            padding: 14px 30px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .btn-calculate:hover {
+            background: #f9a800;
+        }
+
+        .actions-section {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            border-top: 2px solid #eee;
+            padding-top: 20px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .address-list, .map-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .address-list h2, .map-section h2 {
+            font-size: 18px;
+            color: #0058a3;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .address-count {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .address-count span {
+            font-weight: 700;
+            color: #0058a3;
+        }
+
+        #address-list {
+            list-style: none;
+            padding: 0;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        #address-list li {
+            padding: 12px 14px;
+            margin-bottom: 8px;
+            background: #f5f7fa;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #0058a3;
+        }
+
+        #address-list li.origin-item {
+            background: #e3f2fd;
+            border-left: 4px solid #ffb300;
+            font-weight: 600;
+        }
+
+        #address-list li .address-text {
+            flex: 1;
+        }
+
+        #address-list li .distance-badge {
+            background: #0058a3;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-right: 10px;
+        }
+
+        #address-list li .delete-btn {
+            background: none;
+            border: none;
+            color: #e53935;
+            cursor: pointer;
+            padding: 5px 8px;
+            border-radius: 6px;
+        }
+
+        #address-list li .delete-btn:hover {
+            background: #ffebee;
+        }
+
+        .empty-message {
+            color: #999;
+            text-align: center;
+            padding: 30px 20px !important;
+            border-left: 4px solid #ddd !important;
+            background: #fafafa !important;
+        }
+
+        .origin-info {
+            margin-top: 15px;
+            padding: 12px 14px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        #map-container {
+            width: 100%;
+            height: 500px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #e8edf3;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .loading-overlay.hidden {
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0058a3;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .voice-status {
+            margin-top: 10px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .voice-status.active {
+            display: flex;
+        }
+
+        .voice-status.listening {
+            background: #ffebee;
+            border: 1px solid #ef9a9a;
+        }
+
+        .voice-status.success {
+            background: #e8f5e9;
+            border: 1px solid #a5d6a7;
+        }
+
+        .voice-status.error {
+            background: #ffebee;
+            border: 1px solid #ef9a9a;
+        }
+
+        footer {
+            margin-top: 30px;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            border-top: 1px solid #ddd;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c1c7cd;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8b0b8;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <h1>🚚 Rutas IKEA Jerez</h1>
+                <span class="badge-voice">🎤 VOZ</span>
+            </div>
+            <p class="subtitle">Ordena tus entregas por cercanía a IKEA Jerez</p>
+        </header>
+
+        <main>
+            <section class="control-panel">
+                <div class="input-section">
+                    <h2>📍 Añadir Direcciones</h2>
+                    <div class="form-group">
+                        <div class="input-with-button">
+                            <input type="text" id="address" placeholder="Calle, número, ciudad" />
+                            <button id="voice-btn" class="btn-voice">
+                                <span class="material-icons">mic</span> Hablar
+                            </button>
+                            <button id="add-address" class="btn-primary">
+                                <span class="material-icons">add</span> Añadir
+                            </button>
+                        </div>
+                        
+                        <div id="voice-status" class="voice-status">
+                            <span class="material-icons" id="status-icon">mic</span>
+                            <span id="voice-text">Escuchando...</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <textarea id="bulk-addresses" rows="4" placeholder="Calle Larga 45, Jerez&#10;Avenida de la Constitución 12, Sanlúcar&#10;Plaza de España 7, El Puerto"></textarea>
+                        <button id="bulk-add" class="btn-secondary" style="margin-top:8px;">
+                            <span class="material-icons">playlist_add</span> Añadir todas
+                        </button>
+                    </div>
+                </div>
+
+                <div class="actions-section">
+                    <button id="sort-by-distance" class="btn-calculate">
+                        <span class="material-icons">sort</span> Ordenar por Cercanía
+                    </button>
+                    <button id="clear-all" class="btn-danger">
+                        <span class="material-icons">delete_sweep</span> Limpiar todo
+                    </button>
+                </div>
+            </section>
+
+            <div class="content-grid">
+                <section class="address-list">
+                    <h2>📋 Lista de Direcciones</h2>
+                    <div class="address-count">
+                        <span id="address-count">0</span> direcciones cargadas
+                    </div>
+                    <ul id="address-list">
+                        <li class="empty-message">No hay direcciones cargadas.</li>
+                    </ul>
+                    <div class="origin-info">
+                        <span class="material-icons">flag</span>
+                        <strong>📍 Origen:</strong> IKEA Jerez - Carretera de Circunvalación
+                    </div>
+                </section>
+
+                <section class="map-section">
+                    <h2>🗺️ Mapa</h2>
+                    <div id="map-container" style="position:relative;">
+                        <div id="map"></div>
+                        <div id="map-loading" class="loading-overlay">
+                            <div class="spinner"></div>
+                            <p>Cargando mapa...</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <footer>
+            <p>© 2024 - Sistema de ordenamiento por cercanía a IKEA Jerez</p>
+        </footer>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        const IKEA_JEREZ = { lat: 36.7125, lng: -6.1250 };
+        let map, addresses = [], markers = [], recognition, isListening = false;
+
+        function initMap() {
+            map = L.map('map').setView([IKEA_JEREZ.lat, IKEA_JEREZ.lng], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap',
+                maxZoom: 19
+            }).addTo(map);
+            document.getElementById('map-loading').classList.add('hidden');
+            addOriginMarker();
+            addIKEAToList();
+        }
+
+        function addOriginMarker() {
+            const icon = L.divIcon({ html: '🏪', iconSize: [35, 35], iconAnchor: [17, 35] });
+            L.marker([IKEA_JEREZ.lat, IKEA_JEREZ.lng], { icon }).addTo(map)
+                .bindPopup('<strong>IKEA Jerez</strong>');
+        }
+
+        function addIKEAToList() {
+            const list = document.getElementById('address-list');
+            list.innerHTML = '';
+            const li = document.createElement('li');
+            li.className = 'origin-item';
+            li.innerHTML = `<span class="address-text">🏪 <strong>IKEA Jerez</strong> (Origen)</span>
+                           <span class="distance-badge">📍 ORIGEN</span>`;
+            list.appendChild(li);
+        }
+
+        // MICRÓFONO - FUNCIONA DIRECTAMENTE
+        function initVoice() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                document.getElementById('voice-btn').disabled = true;
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.lang = 'es-ES';
+            recognition.continuous = false;
+            recognition.interimResults = true;
+
+            recognition.onstart = function() {
+                isListening = true;
+                document.getElementById('voice-btn').classList.add('listening');
+                document.getElementById('voice-btn').innerHTML = '<span class="material-icons">stop</span> Parar';
+                showStatus('listening', '🎤', 'Escuchando...');
+            };
+
+            recognition.onresult = function(event) {
+                let final = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    if (event.results[i].isFinal) {
+                        final += event.results[i][0].transcript;
+                    }
+                }
+                if (final) {
+                    document.getElementById('address').value = final.trim();
+                    showStatus('success', '✅', `"${final.trim()}"`);
+                    setTimeout(() => {
+                        processMultipleAddresses(final.trim());
+                        document.getElementById('address').value = '';
+                        stopListening();
+                    }, 800);
+                }
+            };
+
+            recognition.onerror = function(event) {
+                if (event.error === 'not-allowed') {
+                    showStatus('error', '❌', 'Permiso denegado. Permite el micrófono.');
+                } else {
+                    showStatus('error', '❌', 'Error: ' + event.error);
+                }
+                stopListening();
+            };
+
+            recognition.onend = function() {
+                stopListening();
+            };
+
+            document.getElementById('voice-btn').addEventListener('click', function() {
+                if (isListening) {
+                    stopListening();
+                    return;
+                }
+
+                // Pedir permiso directamente
+                if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                    navigator.mediaDevices.getUserMedia({ audio: true })
+                        .then(function(stream) {
+                            stream.getTracks().forEach(t => t.stop());
+                            recognition.start();
+                            document.getElementById('voice-status').classList.add('active');
+                        })
+                        .catch(function(err) {
+                            showStatus('error', '❌', 'Permiso denegado. Permite el micrófono.');
+                            console.error(err);
+                        });
+                } else {
+                    recognition.start();
+                    document.getElementById('voice-status').classList.add('active');
+                }
+            });
+        }
+
+        function stopListening() {
+            isListening = false;
+            document.getElementById('voice-btn').classList.remove('listening');
+            document.getElementById('voice-btn').innerHTML = '<span class="material-icons">mic</span> Hablar';
+            if (recognition) {
+                try { recognition.stop(); } catch(e) {}
+            }
+            setTimeout(() => {
+                document.getElementById('voice-status').classList.remove('active', 'listening', 'success', 'error');
+            }, 2000);
+        }
+
+        function showStatus(type, icon, message) {
+            const status = document.getElementById('voice-status');
+            status.className = 'voice-status active ' + type;
+            document.getElementById('status-icon').textContent = icon;
+            document.getElementById('voice-text').textContent = message;
+        }
+
+        function processMultipleAddresses(text) {
+            let parts = text.split(/\s*y\s*|\s*,\s*|\s*coma\s*/).map(p => p.trim()).filter(p => p.length > 0);
+            if (parts.length === 0) return;
+            
+            let added = 0, errors = [];
+            parts.forEach(async (addr) => {
+                try {
+                    await addAddress(addr);
+                    added++;
+                } catch(e) {
+                    errors.push(addr);
+                }
+                if (added + errors.length === parts.length && addresses.length > 0) {
+                    setTimeout(sortByDistance, 500);
+                }
+            });
+        }
+
+        async function geocodeAddress(address) {
+            const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address + ', Cádiz, España')}&format=json&limit=1`;
+            const response = await fetch(url, { headers: { 'User-Agent': 'RutasIKEA/1.0' } });
+            if (!response.ok) throw new Error('Error');
+            const data = await response.json();
+            if (data && data.length > 0) {
+                return { address, lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+            }
+            throw new Error('No encontrada');
+        }
+
+        async function addAddress(address) {
+            try {
+                const geoData = await geocodeAddress(address);
+                if (addresses.some(a => a.address.toLowerCase() === address.toLowerCase())) return;
+                addresses.push(geoData);
+                updateAddressList();
+                addMarker(geoData);
+                updateAddressCount();
+                document.getElementById('address').value = '';
+            } catch(e) {
+                throw e;
+            }
+        }
+
+        function addMarker(location) {
+            const index = addresses.length;
+            const icon = L.divIcon({
+                html: `<div style="background:#0058a3;color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:13px;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);">${index}</div>`,
+                iconSize: [28, 28],
+                iconAnchor: [14, 28]
+            });
+            const marker = L.marker([location.lat, location.lng], { icon }).addTo(map)
+                .bindPopup(`<strong>${location.address}</strong>`);
+            markers.push(marker);
+            fitMap();
+        }
+
+        function fitMap() {
+            if (markers.length === 0) {
+                map.setView([IKEA_JEREZ.lat, IKEA_JEREZ.lng], 13);
+                return;
+            }
+            const group = L.featureGroup(markers);
+            const ikea = L.marker([IKEA_JEREZ.lat, IKEA_JEREZ.lng]);
+            group.addLayer(ikea);
+            map.fitBounds(group.getBounds(), { padding: [50, 50] });
+            map.removeLayer(ikea);
+        }
+
+        function updateAddressList() {
+            const list = document.getElementById('address-list');
+            list.innerHTML = '';
+            const ikeaLi = document.createElement('li');
+            ikeaLi.className = 'origin-item';
+            ikeaLi.innerHTML = `<span class="address-text">🏪 <strong>IKEA Jerez</strong> (Origen)</span>
+                               <span class="distance-badge">📍 ORIGEN</span>`;
+            list.appendChild(ikeaLi);
+            
+            if (addresses.length === 0) {
+                const empty = document.createElement('li');
+                empty.className = 'empty-message';
+                empty.textContent = 'No hay direcciones cargadas.';
+                list.appendChild(empty);
+                return;
+            }
+            
+            addresses.forEach((addr, index) => {
+                const li = document.createElement('li');
+                li.className = 'fade-in';
+                const dist = calculateDistance(IKEA_JEREZ.lat, IKEA_JEREZ.lng, addr.lat, addr.lng);
+                li.innerHTML = `
+                    <span class="address-text">${index + 1}. ${addr.address}</span>
+                    <span class="distance-badge">${dist.toFixed(1)} km</span>
+                    <button class="delete-btn" onclick="removeAddress(${index})">
+                        <span class="material-icons">delete</span>
+                    </button>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function updateAddressCount() {
+            document.getElementById('address-count').textContent = addresses.length;
+        }
+
+        function removeAddress(index) {
+            if (index >= 0 && index < addresses.length) {
+                map.removeLayer(markers[index]);
+                markers.splice(index, 1);
+                addresses.splice(index, 1);
+                updateAddressList();
+                updateAddressCount();
+                fitMap();
+            }
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                     Math.sin(dLon/2) * Math.sin(dLon/2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+
+        function sortByDistance() {
+            if (addresses.length === 0) {
+                alert('No hay direcciones para ordenar.');
+                return;
+            }
+            
+            const sorted = addresses.map(addr => ({
+                ...addr,
+                distance: calculateDistance(IKEA_JEREZ.lat, IKEA_JEREZ.lng, addr.lat, addr.lng)
+            })).sort((a, b) => a.distance - b.distance);
+            
+            addresses = sorted.map(({ address, lat, lng }) => ({ address, lat, lng }));
+            
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+            
+            addresses.forEach((addr, index) => {
+                const icon = L.divIcon({
+                    html: `<div style="background:#0058a3;color:white;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:13px;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);">${index + 1}</div>`,
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 28]
+                });
+                const marker = L.marker([addr.lat, addr.lng], { icon }).addTo(map)
+                    .bindPopup(`<strong>${addr.address}</strong>`);
+                markers.push(marker);
+            });
+            
+            updateAddressList();
+            fitMap();
+            showStatus('success', '✅', 'Ordenado por cercanía');
+            setTimeout(() => {
+                document.getElementById('voice-status').classList.remove('active');
+            }, 2000);
+        }
+
+        // Eventos
+        document.getElementById('address').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const addr = this.value.trim();
+                if (addr) { addAddress(addr); setTimeout(sortByDistance, 500); }
+            }
+        });
+
+        document.getElementById('add-address').addEventListener('click', function() {
+            const addr = document.getElementById('address').value.trim();
+            if (addr) { addAddress(addr); setTimeout(sortByDistance, 500); }
+        });
+
+        document.getElementById('bulk-add').addEventListener('click', async function() {
+            const text = document.getElementById('bulk-addresses').value.trim();
+            if (!text) { alert('Escribe al menos una dirección.'); return; }
+            const lines = text.split('\n').filter(l => l.trim() !== '');
+            let added = 0, errors = [];
+            for (const line of lines) {
+                try { await addAddress(line.trim()); added++; } catch(e) { errors.push(line); }
+            }
+            alert(`Añadidas ${added} direcciones.${errors.length ? ' Errores: ' + errors.length : ''}`);
+            if (addresses.length > 0) setTimeout(sortByDistance, 500);
+            document.getElementById('bulk-addresses').value = '';
+        });
+
+        document.getElementById('sort-by-distance').addEventListener('click', sortByDistance);
+
+        document.getElementById('clear-all').addEventListener('click', function() {
+            if (addresses.length === 0) return;
+            if (confirm('¿Eliminar todos los pedidos?')) {
+                markers.forEach(m => map.removeLayer(m));
+                markers = [];
+                addresses = [];
+                updateAddressList();
+                updateAddressCount();
+                map.setView([IKEA_JEREZ.lat, IKEA_JEREZ.lng], 13);
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateAddressCount();
+            initMap();
+            initVoice();
+        });
+
+        window.removeAddress = removeAddress;
+        window.sortByDistance = sortByDistance;
+    </script>
+</body>
+</html>
